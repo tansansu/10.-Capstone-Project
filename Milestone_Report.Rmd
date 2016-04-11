@@ -1,0 +1,133 @@
+---
+title: "Milestone Report"
+author: "Julian Jang"
+date: "March 16, 2016"
+output: html_document
+---
+```{r, echo = F}
+load("Mywork.RData")
+```
+
+### **Summary**
+
+This Report is a assignment of the Capstone Project of 'Coursera Data Science Specialization'. The goal of the Capstone Project is development of the model predicting the next word using NLP. And, this will show a basic analysis(EDA) and my plan to create the prediction algorithm.
+
+### **1. Importing & Cleaning the Data**
+
+First, I need to load some packages to handle these datasets.
+
+```{r, message = F}
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(knitr)
+```
+
+I have downloaded the dataset files and loaded into 'R worksapce' using *readLines* function.
+
+```{r, eval = F}
+dir <- "data/final/en_US/"
+files <- list.files(dir)
+
+blogs <- readLines(paste0(dir, files[1]), encoding = "UTF-8")
+news <- readLines(paste0(dir, files[2]), encoding = "UTF-8")
+twitter <- readLines(paste0(dir, files[3]), encoding = "UTF-8", skipNul = T)
+```
+
+### **2. EDA**
+
+I have explored the dataset to figure out some features. So I show some base statistics of three data. I used the sample dataset of the three dataset except the number of whole lines of those datasets for convenience of computing. We already know that the proper samples can represent features of the population.
+
+#### A. Number of the lines of the original dataset
+
+```{r, eval = F}
+## Counting lines each data set
+count_lines_total <- data.frame(blogs = length(blogs), 
+                                news = length(news), 
+                                twitter = length(twitter)) %>% 
+    mutate(total = sum(blogs, news, twitter))
+```
+
+#### B. Number of the lines of the sample dataset
+
+##### B-1. A function for extracting words
+
+```{r}
+SimpleWords <- function(x) {
+    return(x %>% strsplit(split = " ") %>% 
+               unlist() %>% 
+               gsub("http[[:alnum:]]*", "", x = .) %>% 
+               str_replace_all(pattern = "[:punct:]", "") %>% 
+               str_replace_all(pattern = "[:cntrl:]", "") %>% 
+               str_replace_all(pattern = "[0-9]", "") %>% 
+               str_to_lower() %>% 
+               .[. != ""])
+}
+```
+
+##### B-2. Number of the lines and words 
+
+```{r, message = F, fig.align = "center", fig.width = 700}
+count_words_sample <- data.frame(blogs = length(SimpleWords(sam_blogs)), 
+                                 news = length(SimpleWords(sam_news)), 
+                                 twitter = length(SimpleWords(sam_twitter))) %>% 
+    mutate(total = sum(blogs, news, twitter))
+count_words_sample_nodup <- data.frame(blogs = length(unique(SimpleWords(sam_blogs))), 
+                                       news = length(unique(SimpleWords(sam_news))), 
+                                       twitter = length(unique(SimpleWords(sam_twitter)))) %>% 
+    mutate(total = sum(blogs, news, twitter))
+summary_dataset <- rbind(count_lines_total, c(20000, 20000, 20000, 60000), 
+                         count_words_sample, count_words_sample_nodup) %>% 
+    rbind(round(.[3, ] / .[2, ]))
+rownames(summary_dataset) <- c("Number of Lines of Raw Data", 
+                               "Number of Lines of Sample Data", 
+                               "Number of Words of Sample Data", 
+                               "Number of unique Words of Sample Data", 
+                               "Number of Words per a line of Sample Data")
+kable(summary_dataset, format.args = list(big.mark = ","))
+```
+
+As you can see above summary table, We could discover some informations.
+
+* 'twitter' has the biggest lines, but they have the least words and words per a line. I think that this is caused by the limiting of the words numbers in ONE 'Tweet'.
+* 'blogs' has the biggest words per a line, it shows that a sentence of the blogs is long.
+* 'news' dataset also shows a information. Although they have less words per a line than 'blogs'(about 80%), they had have kinds of words equal level with 'blogs''s it(about 96%). I think that it means that news articles have more various words than blogs.
+
+#### C. Frequencies of the words in each dataset
+
+I have made a plot to show the the most frequent 20 words. And, I have found out some features of these words.
+
+* ```i``` : This word would be used more frequently in the 'twitter' than the 'news'. I think that people using the twitter talks about the 'oneself'. In the other hand, the 'news' usually says all other things.
+* ```you``` : This word also was more frequently used in the 'twitter' than the 'news'.
+* ```in``` & ```at``` : As you can see a below plot, the frequency of words in 'blogs' is most great. The 'news' is the second. Because, 'the number of words' of the 'blogs' is bigger than the 'news''s it. But, these two words are reversed. I guess that 'news' articles are more saying about 'space' or 'place' or 'location'.
+
+```{r, fig.align = "center"}
+freq_blogs <- as.data.frame(table(SimpleWords(sam_blogs))) %>% arrange(desc(Freq))
+freq_news <- as.data.frame(table(SimpleWords(sam_news))) %>% arrange(desc(Freq))
+freq_twitter <- as.data.frame(table(SimpleWords(sam_twitter))) %>% arrange(desc(Freq))
+names(freq_blogs) <- c("Word", "blogs")
+names(freq_news) <- c("Word", "news")
+names(freq_twitter) <- c("Word", "twitter")
+freq_total <- merge(freq_blogs, freq_news, by = "Word", all = T) %>% 
+    merge(x = ., freq_twitter, by = "Word", all = T) %>% 
+    mutate(Total = rowSums(.[, 2:4])) %>% 
+    arrange(desc(Total))
+gg_freq <- freq_total[1:20, 1:5]
+gg_freq$Word <- factor(gg_freq$Word, levels = freq_total[20:1, 1])
+
+ggplot(gg_freq[, 1:4] %>% gather(Dataset, value, -Word), aes(x = Word, y = value, col = Dataset)) +
+    geom_point(fill = "white", alpha = .4, size = 4) + 
+    ylab("Frequency") + 
+    ggtitle("Top 20 words of the most Frequent words") + 
+    coord_flip()
+```
+
+### **3. A plan to make a prediction model**
+
+To make prediction model, I am going to use three n-grams strategy.
+
+* At first, the model searches 3-grams matching the inputed words.
+* Second, if the model can't find the matched 3-grams, then it searches 2-grams for matching.
+* Third, if the model also can't find the matched 2-grams, then it searches matched 1-grams.
+* Finally, if no one matches the inputted words and the cursor in the head of the line, I will show the most frequent subject words like 'I' or 'you'. In the other hand, if the cursor in the middle of the sentence, I will show the most frequently used words excluding subject words.
