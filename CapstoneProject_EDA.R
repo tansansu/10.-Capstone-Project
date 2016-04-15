@@ -220,9 +220,4 @@ grams_app$Recommend[grams_app$Recommend == "hes"] <- "he's"
 grams_app$Recommend[grams_app$Recommend == "shes"] <- "she's"
 grams_app$Recommend[grams_app$Recommend == "im"] <- "I'm"
 
-# 6. Evaluation of the model ####
-#### train set: I used the sample of the data frame that used making prediction model
-index_train <- sample(1:nrow(grams_app), 1000)
-trainset <- grams_app[index_train, ]
-trainset$result <- sapply(trainset$Lookup, pred_word)
 

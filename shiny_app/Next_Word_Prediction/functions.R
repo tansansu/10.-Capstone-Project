@@ -45,7 +45,6 @@ pred_word <- function(x) {clean_word(x)
                                   stringsAsFactors = F)
         recom <- rbind(recom, top_1_words)    
     }
-    print(head(recom, 3))
     return(head(recom, 3))
 }
 
