@@ -187,6 +187,3 @@ clean_word <- function(x) {
         .[. != ""]
 }
 ```
-
-
-

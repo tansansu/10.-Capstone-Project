@@ -17,7 +17,7 @@ ui <- shinyUI(fluidPage(
     fluidRow(
         column(width = 12, align = "center", 
                style = "text-align:center;", 
-               h4("Please just wait for 15 secs. It takes some seconds to ready the dataset. :-)", 
+               h4("Please just wait for 15 secs. It takes some seconds to prepare the dataset. :-)", 
                   style = "line-height: 1;text-align: center;color: darkred;"), 
                h4("And, Type any sentence in english.", 
                   style = "line-height: 1;text-align: center;color: gray;")

@@ -14,7 +14,7 @@ library(tidyr)
 index_train <- sample(1:nrow(grams_app), 1000)
 trainset <- grams_app[index_train, ]
 trainset$result <- sapply(trainset$Lookup, pred_word)
-### accurate => 0.506
+### accuracy => 0.506
 sum(trainset$Recommend == trainset$result) / nrow(trainset)
 
 ## test set: I used the resampled data from raw(!) sample dataset 
