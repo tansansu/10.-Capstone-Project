@@ -6,7 +6,7 @@ autosize: true
 
 What is it?
 ========================================================
-This app guess what is the word you may think  
+This app guesses what is the word you may think  
 and recommends the maximum three words that are highly probable.
 
 - The design of the web is 'google.com' style. :-)
