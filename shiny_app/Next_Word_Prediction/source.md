@@ -11,7 +11,7 @@ source("functions.R")
 load(file = "grams_app.RData", envir = .GlobalEnv)
 load(file = "gram_1.RData", envir = .GlobalEnv)
 
-# Define UI for application that draws a histogram
+# Define UI for application
 ui <- shinyUI(fluidPage(
     tags$head(
         tags$title("Words You May Type")
@@ -61,7 +61,7 @@ ui <- shinyUI(fluidPage(
     )
 ))
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- shinyServer(function(input, output) {
     result <- NULL
     cap1 <- reactive({
@@ -125,7 +125,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 
-pred_word <- function(x) {clean_word(x)
+pred_word <- function(x) {
     recom <- NULL
     word_temp <- str_split(clean_word(x), pattern = " ") %>% unlist() %>% .[. != ""]
     word_count <- word_temp %>% length()

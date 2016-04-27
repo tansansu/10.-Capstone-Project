@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 
-pred_word <- function(x) {clean_word(x)
+pred_word <- function(x) {
     recom <- NULL
     word_temp <- str_split(clean_word(x), pattern = " ") %>% unlist() %>% .[. != ""]
     word_count <- word_temp %>% length()
